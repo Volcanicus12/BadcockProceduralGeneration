@@ -262,9 +262,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b75c9209103573243983c625e6ed974f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mapWidth: 0
-  mapHeight: 0
+  mapWidth: 1
+  mapHeight: 1
   noiseScale: 0
+  octaves: 0
+  persistance: 0
+  lacunarity: 1
+  seed: 0
+  offset: {x: 0, y: 0}
   autoUpdate: 0
 --- !u!114 &1549550595
 MonoBehaviour:
@@ -280,5 +285,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   mapWidth: 100
   mapHeight: 100
-  noiseScale: 0.65
+  noiseScale: 12.25
+  octaves: 4
+  persistance: 0.507
+  lacunarity: 1
+  seed: 21
+  offset: {x: 4.34, y: 4.61}
   autoUpdate: 1
