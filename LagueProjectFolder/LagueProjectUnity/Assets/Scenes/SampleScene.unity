@@ -288,10 +288,10 @@ MonoBehaviour:
   drawMode: 1
   mapWidth: 100
   mapHeight: 100
-  noiseScale: 25
-  octaves: 5
-  persistance: 0.5
-  lacunarity: 1.94
+  noiseScale: 15.8
+  octaves: 2
+  persistance: 0
+  lacunarity: 1
   seed: 0
   offset: {x: 0, y: 0}
   autoUpdate: 1

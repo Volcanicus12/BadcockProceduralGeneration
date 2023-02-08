@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+//ai autocomplete for visual studios
+
 public class MapGenerator : MonoBehaviour
 {
     public enum DrawMode {NoiseMap, ColorMap};
@@ -9,7 +11,7 @@ public class MapGenerator : MonoBehaviour
 
     public int mapWidth;
     public int mapHeight;
-    public float noiseScale;
+    public float noiseScale;//literally just a zoom
     public int octaves;
     [Range(0,1)]
     public float persistance;
