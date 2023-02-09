@@ -6,8 +6,10 @@ public class EndlessTerrain : MonoBehaviour
 {
     public const float maxViewDst = 450;//const makes it so it can't be changed in run time
     public Transform viewer; //reference to viewer pos
+    public Material mapMaterial;
 
     public static Vector2 viewerPosition;
+    static MapGenerator mapGenerator;
     int chunkSize;
     int chunksVisibleInViewDst;
 
@@ -17,6 +19,7 @@ public class EndlessTerrain : MonoBehaviour
 
     void Start()
     {
+        mapGenerator = FindObjectOfType<MapGenerator>();
         chunkSize = MapGenerator.mapChunkSize - 1;//bc our actual map chunk size is 1 less than what we say
         chunksVisibleInViewDst = Mathf.RoundToInt(maxViewDst / chunkSize);
     }
@@ -56,7 +59,7 @@ public class EndlessTerrain : MonoBehaviour
                 }
                 else//if new terrain
                 {
-                    terrainChunkDictionary.Add(viewedChunkCoord, new TerrainChunk(viewedChunkCoord, chunkSize, transform));
+                    terrainChunkDictionary.Add(viewedChunkCoord, new TerrainChunk(viewedChunkCoord, chunkSize, transform, mapMaterial));
                 }
             }
         }
@@ -69,19 +72,42 @@ public class EndlessTerrain : MonoBehaviour
         Vector2 position;
         Bounds bounds;//bounding box
 
-        public TerrainChunk(Vector2 coord, int size, Transform parent)
+        //MapData mapData;
+        MeshRenderer meshRenderer;
+        MeshFilter meshFilter;
+
+
+        public TerrainChunk(Vector2 coord, int size, Transform parent, Material material)
         {
             position = coord * size;
             bounds = new Bounds(position, Vector2.one * size);
             Vector3 positionV3 = new Vector3(position.x, 0, position.y);//need v3 bc using 3d space
 
             //instantiate plane object
-            meshObject = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            meshObject = new GameObject("Terrain Chunk");
+            meshRenderer = meshObject.AddComponent<MeshRenderer>();//you can do this bc add component returns the component that it adds
+            meshFilter = meshObject.AddComponent<MeshFilter>();
+			meshRenderer.material = material;
+
             meshObject.transform.position = positionV3;//moves to right place
-            meshObject.transform.localScale = Vector3.one * size / 10f;//use 10 bc primitive plane is 10 units...v3.one is just a v3 where everything is set to 1
             meshObject.transform.parent = parent;//sets parent
             SetVisible(false);//all chunks start invis
+
+            mapGenerator.RequestMapData(OnMapDataReceived);
         }
+
+
+        //threading
+        void OnMapDataReceived(MapData mapData)
+        {
+            mapGenerator.RequestMeshData(mapData, OnMeshDataReceived);
+        }
+
+        void OnMeshDataReceived(MeshData meshData)
+        {
+            meshFilter.mesh = meshData.CreateMesh();
+        }
+
 
         //constantly seeing what chunks to load
         public void UpdateTerrainChunk()
