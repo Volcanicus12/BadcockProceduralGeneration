@@ -12,6 +12,8 @@ public class MapGenerator : MonoBehaviour
     public enum DrawMode {NoiseMap, ColorMap, Mesh};
     public DrawMode drawMode;
 
+    public Noise.NormalizeMode normalizeMode;
+
     //mesh combining
     public const int mapChunkSize = 241;
     [Range(0,6)]
@@ -54,7 +56,6 @@ public class MapGenerator : MonoBehaviour
         }
         else if (drawMode == DrawMode.Mesh)
         {
-            Debug.Log("we made it");
             display.DrawMesh(MeshGenerator.GenerateTerrainMesh(mapData.heightMap, meshHeightMultiplier, meshHeightCurve, editorPreviewLOD), TextureGenerator.TextureFromColorMap(mapData.colorMap, mapChunkSize, mapChunkSize));
         }
     }
@@ -124,7 +125,7 @@ public class MapGenerator : MonoBehaviour
     //map building stuff
     MapData GenerateMapData(Vector2 center)
     {
-        float[,] noiseMap = Noise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed, noiseScale, octaves, persistance, lacunarity, center + offset);//center + offset is for creation site to be correct
+        float[,] noiseMap = Noise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed, noiseScale, octaves, persistance, lacunarity, center + offset, normalizeMode);//center + offset is for creation site to be correct
 
         Color[] colorMap = new Color[mapChunkSize * mapChunkSize];
         for (int y = 0; y < mapChunkSize; y++)
@@ -134,10 +135,13 @@ public class MapGenerator : MonoBehaviour
                 float currentHeight = noiseMap[x, y];
                 for(int i = 0; i < regions.Length; i++)
                 {
-                    if(currentHeight <= regions[i].height)
+                    if(currentHeight >= regions[i].height)
                     {
                         colorMap[y * mapChunkSize + x] = regions[i].color;
-                        break;//break bc we found that we are within the right range
+                    }
+                    else
+                    {
+                        break;//breaks if a value reached is less than region's height
                     }
                 }
             }

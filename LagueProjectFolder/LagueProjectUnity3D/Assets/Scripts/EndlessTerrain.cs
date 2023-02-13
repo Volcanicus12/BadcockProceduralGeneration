@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class EndlessTerrain : MonoBehaviour
 {
+    const float scale = 1f;//makes it easy to scale map
+
     const float viewerMoveThresholdForChunkUpdate = 25f;//acts as distance we must travel before bothering to change chunks...makes it so we don't have to update check every frame
     const float sqrViewerMoveThresholdForChunkUpdate = viewerMoveThresholdForChunkUpdate * viewerMoveThresholdForChunkUpdate;//square it bc it is quicker than square root operation
 
@@ -20,7 +22,7 @@ public class EndlessTerrain : MonoBehaviour
 
     //terrain chunk managers
     Dictionary<Vector2, TerrainChunk> terrainChunkDictionary = new Dictionary<Vector2, TerrainChunk>();
-    List<TerrainChunk> terrainChunksVisibleLastUpdate = new List<TerrainChunk>();
+    static List<TerrainChunk> terrainChunksVisibleLastUpdate = new List<TerrainChunk>();
 
     void Start()
     {
@@ -36,7 +38,7 @@ public class EndlessTerrain : MonoBehaviour
 
     void Update()//constantly seeing who is nearby
     {
-        viewerPosition = new Vector2(viewer.position.x, viewer.position.z);
+        viewerPosition = new Vector2(viewer.position.x, viewer.position.z) / scale ;
         if((viewerPositionOld - viewerPosition). sqrMagnitude > sqrViewerMoveThresholdForChunkUpdate)//if the viewer has moved the necessary amount then do a visibility update
         {
             viewerPositionOld = viewerPosition;
@@ -66,10 +68,10 @@ public class EndlessTerrain : MonoBehaviour
                 if (terrainChunkDictionary.ContainsKey(viewedChunkCoord))//if contains key...already been generated
                 {
                     terrainChunkDictionary[viewedChunkCoord].UpdateTerrainChunk();
-                    if (terrainChunkDictionary[viewedChunkCoord].isVisible())
-                    {
-                        terrainChunksVisibleLastUpdate.Add(terrainChunkDictionary[viewedChunkCoord]);
-                    }
+                    //if (terrainChunkDictionary[viewedChunkCoord].isVisible())
+                    //{
+                    //    terrainChunksVisibleLastUpdate.Add(terrainChunkDictionary[viewedChunkCoord]);
+                    //}this introduced an error that basically meant we updated visible here and then later in a callback
                 }
                 else//if new terrain
                 {
@@ -112,8 +114,9 @@ public class EndlessTerrain : MonoBehaviour
             meshFilter = meshObject.AddComponent<MeshFilter>();
 			meshRenderer.material = material;
 
-            meshObject.transform.position = positionV3;//moves to right place
+            meshObject.transform.position = positionV3 * scale;//moves to right place
             meshObject.transform.parent = parent;//sets parent
+            meshObject.transform.localScale = Vector3.one * scale;
             SetVisible(false);//all chunks start invis
 
             lodMeshes = new LODMesh[detailLevels.Length];
@@ -176,6 +179,8 @@ public class EndlessTerrain : MonoBehaviour
                             lodMesh.RequestMesh(mapData);
                         }
                     }
+
+                    terrainChunksVisibleLastUpdate.Add(this);//just adds self to visible if it is visible
                 }
                 SetVisible(visible);//if visible is true then makes it visible, but if false then doesn't
             }
