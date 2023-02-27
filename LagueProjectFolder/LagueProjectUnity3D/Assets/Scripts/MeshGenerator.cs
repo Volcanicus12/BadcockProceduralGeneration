@@ -15,7 +15,7 @@ public static class MeshGenerator
         float topLeftX = (width - 1) / -2f;
         float topLeftZ = (height - 1) / 2f;
 
-        int meshSimplificationIncrement = (levelOfDetail == 0)?1: levelOfDetail * 2;//if LOD is == 0 then set to 1, but otherwise doe LOD*2
+        int meshSimplificationIncrement = (levelOfDetail == 0)?1: levelOfDetail * 2;//if LOD is == 0 then set to 1, but otherwise do LOD*2
         int verticesPerLine = (width - 1) / meshSimplificationIncrement + 1;
 
 
