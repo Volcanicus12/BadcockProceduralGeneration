@@ -4,8 +4,6 @@ using UnityEngine;
 
 public class EndlessTerrain : MonoBehaviour
 {
-    const float scale = 2f;//makes it easy to scale map
-
     const float viewerMoveThresholdForChunkUpdate = 25f;//acts as distance we must travel before bothering to change chunks...makes it so we don't have to update check every frame
     const float sqrViewerMoveThresholdForChunkUpdate = viewerMoveThresholdForChunkUpdate * viewerMoveThresholdForChunkUpdate;//square it bc it is quicker than square root operation
 
@@ -30,7 +28,7 @@ public class EndlessTerrain : MonoBehaviour
 
         maxViewDst = detailLevels[detailLevels.Length - 1].visibleDstThreshold;
 
-        chunkSize = MapGenerator.mapChunkSize - 1;//bc our actual map chunk size is 1 less than what we say
+        chunkSize = mapGenerator.mapChunkSize - 1;//bc our actual map chunk size is 1 less than what we say
         chunksVisibleInViewDst = Mathf.RoundToInt(maxViewDst / chunkSize);
 
         UpdateVisibleChunks();//do this to make sure that first chunks get drawn
@@ -38,7 +36,7 @@ public class EndlessTerrain : MonoBehaviour
 
     void Update()//constantly seeing who is nearby
     {
-        viewerPosition = new Vector2(viewer.position.x, viewer.position.z) / scale ;
+        viewerPosition = new Vector2(viewer.position.x, viewer.position.z) / mapGenerator.terrainData.uniformScale;
         if((viewerPositionOld - viewerPosition). sqrMagnitude > sqrViewerMoveThresholdForChunkUpdate)//if the viewer has moved the necessary amount then do a visibility update
         {
             viewerPositionOld = viewerPosition;
@@ -117,9 +115,9 @@ public class EndlessTerrain : MonoBehaviour
             meshCollider = meshObject.AddComponent<MeshCollider>();
 			meshRenderer.material = material;
 
-            meshObject.transform.position = positionV3 * scale;//moves to right place
+            meshObject.transform.position = positionV3 * mapGenerator.terrainData.uniformScale;//moves to right place
             meshObject.transform.parent = parent;//sets parent
-            meshObject.transform.localScale = Vector3.one * scale;
+            meshObject.transform.localScale = Vector3.one * mapGenerator.terrainData.uniformScale;
             SetVisible(false);//all chunks start invis
 
             lodMeshes = new LODMesh[detailLevels.Length];
@@ -142,10 +140,6 @@ public class EndlessTerrain : MonoBehaviour
         {
             this.mapData = mapData;
             mapDataReceived = true;
-
-            //gets color textures on
-            Texture2D texture = TextureGenerator.TextureFromColorMap(mapData.colorMap, MapGenerator.mapChunkSize, MapGenerator.mapChunkSize);
-            meshRenderer.material.mainTexture = texture;
 
             UpdateTerrainChunk();//update terrain when receive map data(this is for the initial load of the game)
         }
