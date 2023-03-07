@@ -2,7 +2,8 @@ Shader "Custom/Terrain"
 {
     Properties
     {
-
+        testTexture("Texture", 2D) = "white"{}
+        testScale("Scale", Float) = 1
     }
     SubShader
     {
@@ -16,18 +17,28 @@ Shader "Custom/Terrain"
         // Use shader model 3.0 target, to get nicer looking lighting
         #pragma target 3.0
 
-        const static int maxColorCount = 8;//8 is max number of colors we can have
+        const static int maxLayerCount = 8;//8 is max number of colors we can have
+        const static float epsilon = 1E-4;//very small value
 
-        int baseColorCount;
-        float3 baseColors[maxColorCount];//array like C# but [] is after var name
-        float baseStartHeights[maxColorCount];
+        int layerCount;
+        float3 baseColors[maxLayerCount];//array like C# but [] is after var name
+        float baseStartHeights[maxLayerCount];
+        float baseBlends[maxLayerCount];
+        float baseColorStrength[maxLayerCount];
+        float baseTextureScales[maxLayerCount];
 
         float minHeight;
         float maxHeight;
 
+        sampler2D testTexture;
+        float testScale;
+
+        UNITY_DECLARE_TEX2DARRAY(baseTextures);
+
         struct Input
         {
             float3 worldPos;//helps with finding world height
+            float3 worldNormal;
         };
 
 
@@ -43,14 +54,34 @@ Shader "Custom/Terrain"
             // put more per-instance properties here
         UNITY_INSTANCING_BUFFER_END(Props)
 
+        float3 triplanar(float3 worldPos, float scale, float3 blendAxes, int textureIndex) {
+            //we need to make it so that the xyz doesn't stretch...to do this we need a lot of blending
+            float3 scaledWorldPos = worldPos / scale;
+
+            float3 xProjection = UNITY_SAMPLE_TEX2DARRAY(baseTextures, float3(scaledWorldPos.y, scaledWorldPos.z, textureIndex)) * blendAxes.x;//allows us to sample a texture at a given point.
+            float3 yProjection = UNITY_SAMPLE_TEX2DARRAY(baseTextures, float3(scaledWorldPos.x, scaledWorldPos.z, textureIndex)) * blendAxes.y;
+            float3 zProjection = UNITY_SAMPLE_TEX2DARRAY(baseTextures, float3(scaledWorldPos.x, scaledWorldPos.y, textureIndex)) * blendAxes.z;
+            //add all up to create final color
+            return xProjection + yProjection + zProjection;
+        }
+
         void surf (Input IN, inout SurfaceOutputStandard o)//called for every function that the pixel is visible
         {
             float heightPercent = inverseLerp(minHeight, maxHeight, IN.worldPos.y);
-            for (int i = 0; i < baseColorCount; i++) {
+            float3 blendAxes = abs(IN.worldNormal);//we use absolute value bc we don't care if pos or neg
+            blendAxes /= blendAxes.x + blendAxes.y + blendAxes.z;//makes it so our values don't exceed 1 and cause brightness
+
+            for (int i = 0; i < layerCount; i++) {
                 //set cur color if above corresponding base start height
-                float drawStrength = saturate(sign(heightPercent - baseStartHeights[i]));
-                o.Albedo = o.Albedo *(1 - drawStrength) + baseColors[i] * drawStrength;//first half is to ensure that we don't get a black color bc negatives
+                float drawStrength = inverseLerp(-baseBlends[i]/2 - epsilon, baseBlends[i]/2, heightPercent - baseStartHeights[i]);//blending with strength
+                
+                float3 baseColor = baseColors[i] * baseColorStrength[i];
+                float3 textureColor = triplanar(IN.worldPos, baseTextureScales[i], blendAxes, i) * (1 - baseColorStrength[i]);
+
+                o.Albedo = o.Albedo *(1 - drawStrength) + (baseColor + textureColor) * drawStrength;//first half is to ensure that we don't get a black color bc negatives
             }
+
+
         }
         ENDCG
     }
