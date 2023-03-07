@@ -7,6 +7,8 @@ public class UpdatableData : ScriptableObject//this is now the asset scripter an
     public event System.Action OnValuesUpdated;//event is just to note if a change happens
     public bool autoUpdate;//do we want to update if a change happens
 
+    #if UNITY_EDITOR
+    //makes it so code is only compiled if in unity editor
     protected virtual void OnValidate()//called when a value is changed in inspector or scripts compiled
     {
         if (autoUpdate)
@@ -23,4 +25,5 @@ public class UpdatableData : ScriptableObject//this is now the asset scripter an
             OnValuesUpdated();//if onvaluesupdated isn't null then call that event
         }
     }
+    #endif
 }

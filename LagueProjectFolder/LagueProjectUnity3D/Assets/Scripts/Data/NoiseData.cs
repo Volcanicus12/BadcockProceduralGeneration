@@ -19,7 +19,7 @@ public class NoiseData : UpdatableData//lets us make new assets
     //for seeds
     public int seed;
     public Vector2 offset;
-
+    #if UNITY_EDITOR
     protected override void OnValidate()//protected makes this variable not get forgotten and callable by all derived classes
     {
         if (lacunarity < 1)
@@ -33,4 +33,5 @@ public class NoiseData : UpdatableData//lets us make new assets
 
         base.OnValidate();//calls onvalidate in updatabledata as well
     }
+    #endif
 }
