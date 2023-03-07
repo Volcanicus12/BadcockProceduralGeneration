@@ -11,13 +11,14 @@ public class UpdatableData : ScriptableObject//this is now the asset scripter an
     {
         if (autoUpdate)
         {
-            NotifyOfUpdatedValues();
+            UnityEditor.EditorApplication.update += NotifyOfUpdatedValues;//subscribe for instant dong
         }
     }
 
     public void NotifyOfUpdatedValues()
     {
-        if(OnValuesUpdated != null)
+        UnityEditor.EditorApplication.update -= NotifyOfUpdatedValues;//unsub so it doesn't keep calling...delays calling of method til shader is done compiling
+        if (OnValuesUpdated != null)
         {
             OnValuesUpdated();//if onvaluesupdated isn't null then call that event
         }

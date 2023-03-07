@@ -15,4 +15,20 @@ public class TerrainData : UpdatableData
 
     //has to do with the offset stuff
     public bool useFalloff;//allows us to choose whether or not we want to apply the falloff map
+
+    public float minHeight//this is an accessor
+    {
+        get
+        {
+            return uniformScale * meshHeightMultiplier * meshHeightCurve.Evaluate(0);
+        }
+    }
+
+    public float maxHeight
+    {
+        get
+        {
+            return uniformScale * meshHeightMultiplier * meshHeightCurve.Evaluate(1);
+        }
+    }
 }
