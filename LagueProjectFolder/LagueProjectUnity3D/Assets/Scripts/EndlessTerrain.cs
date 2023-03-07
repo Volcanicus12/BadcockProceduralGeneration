@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class EndlessTerrain : MonoBehaviour
 {
-    const float scale = 1f;//makes it easy to scale map
+    const float scale = 2f;//makes it easy to scale map
 
     const float viewerMoveThresholdForChunkUpdate = 25f;//acts as distance we must travel before bothering to change chunks...makes it so we don't have to update check every frame
     const float sqrViewerMoveThresholdForChunkUpdate = viewerMoveThresholdForChunkUpdate * viewerMoveThresholdForChunkUpdate;//square it bc it is quicker than square root operation
@@ -91,9 +91,11 @@ public class EndlessTerrain : MonoBehaviour
         //MapData mapData;
         MeshRenderer meshRenderer;
         MeshFilter meshFilter;
+        MeshCollider meshCollider;
 
         LODInfo[] detailLevels;
         LODMesh[] lodMeshes;
+        LODMesh collisionLODMesh;
 
         MapData mapData;
         bool mapDataReceived;
@@ -112,6 +114,7 @@ public class EndlessTerrain : MonoBehaviour
             meshObject = new GameObject("Terrain Chunk");
             meshRenderer = meshObject.AddComponent<MeshRenderer>();//you can do this bc add component returns the component that it adds
             meshFilter = meshObject.AddComponent<MeshFilter>();
+            meshCollider = meshObject.AddComponent<MeshCollider>();
 			meshRenderer.material = material;
 
             meshObject.transform.position = positionV3 * scale;//moves to right place
@@ -123,6 +126,10 @@ public class EndlessTerrain : MonoBehaviour
             for (int i=0; i < detailLevels.Length; i++)
             {
                 lodMeshes[i] = new LODMesh(detailLevels[i].lod, UpdateTerrainChunk);
+                if (detailLevels[i].useForCollider)//if the mesh has a collider at this distance then give it one
+                {
+                    collisionLODMesh = lodMeshes[i];
+                }
             }
 
 
@@ -173,10 +180,23 @@ public class EndlessTerrain : MonoBehaviour
                         {
                             previousLODIndex = lodIndex;
                             meshFilter.mesh = lodMesh.mesh;
+                            //meshCollider.sharedMesh = lodMesh.mesh;//old line
+
                         }
                         else if (!lodMesh.hasRequestedMesh)//if hasn't requested a mesh
                         {
                             lodMesh.RequestMesh(mapData);
+                        }
+                    }
+                    if(lodIndex == 0)//if player is closest enough to have the map piece be rendered at highest resolution will we add collisions
+                    {
+                        if (collisionLODMesh.hasMesh)//see if the current map piece has a mesh
+                        {
+                            meshCollider.sharedMesh = collisionLODMesh.mesh;
+                        }
+                        else if (!collisionLODMesh.hasRequestedMesh)//see if collisionLODMesh has had its mesh requested
+                        {
+                            collisionLODMesh.RequestMesh(mapData);
                         }
                     }
 
@@ -232,6 +252,7 @@ public class EndlessTerrain : MonoBehaviour
     {
         public int lod;
         public float visibleDstThreshold;
+        public bool useForCollider;
     }
 
 }

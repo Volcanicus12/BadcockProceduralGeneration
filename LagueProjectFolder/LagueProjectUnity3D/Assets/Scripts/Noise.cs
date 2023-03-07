@@ -59,10 +59,10 @@ public static class Noise
                     float sampleX = (x - halfWidth + octaveOffsets[i].x) / scale * frequency;//higher frequency means further apart sample points...height values change more rapidly
                     float sampleY = (y - halfHeight + octaveOffsets[i].y) / scale * frequency;
 
-                    //float perlinValue = Mathf.PerlinNoise(sampleX, sampleY) * 2 - 1;//makes it so that we can be in range -1 to 1..OG
-                    float perlinValue = Mathf.PerlinNoise(sampleX, sampleY) * 2 - 1;//makes it so that we can be in range -1 to 1...first new random
-                    //float perlinValue = Mathf.PerlinNoise(sampleX, sampleY) * 2 - 1;//makes it so that we can be in range -1 to 1...new random
+                    float perlinValue = Mathf.PerlinNoise(sampleX, sampleY) * 2 - 1;//makes it so that we can be in range -1 to 1..OG
+                    //float perlinValue = Random.Range(sampleX, sampleY) * 2 - 1;//this one just uses random
                     //float perlinValue = Mathf.Cos(sampleX) * 2 - 1;
+                    //float perlinValue = Mathf.Cos(sampleY) * 2 - 1;
                     noiseHeight += perlinValue * amplitude;
 
                     amplitude *= persistance;//decreases octave

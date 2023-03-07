@@ -15,7 +15,7 @@ public class MapGenerator : MonoBehaviour
     public Noise.NormalizeMode normalizeMode;
 
     //mesh combining
-    public const int mapChunkSize = 241;
+    public const int mapChunkSize = 239;
     [Range(0,6)]
     public int editorPreviewLOD;//Level of detail
 
@@ -140,7 +140,7 @@ public class MapGenerator : MonoBehaviour
     //map building stuff
     MapData GenerateMapData(Vector2 center)
     {
-        float[,] noiseMap = Noise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed, noiseScale, octaves, persistance, lacunarity, center + offset, normalizeMode);//center + offset is for creation site to be correct
+        float[,] noiseMap = Noise.GenerateNoiseMap(mapChunkSize + 2, mapChunkSize + 2, seed, noiseScale, octaves, persistance, lacunarity, center + offset, normalizeMode);//center + offset is for creation site to be correct...+2 to account for borders
 
         Color[] colorMap = new Color[mapChunkSize * mapChunkSize];
         for (int y = 0; y < mapChunkSize; y++)
