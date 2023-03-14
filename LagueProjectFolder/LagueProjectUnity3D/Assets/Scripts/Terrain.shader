@@ -10,6 +10,7 @@ Shader "Custom/Terrain"
         Tags { "RenderType" = "Opaque" }
         LOD 200
 
+        //hsls
         CGPROGRAM
         // Physically based Standard lighting model, and enable shadows on all light types
         #pragma surface surf Standard fullforwardshadows
