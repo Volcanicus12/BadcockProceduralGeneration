@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Diagnostics;
 
 public class Pathfinding : MonoBehaviour
 {
@@ -15,15 +16,22 @@ public class Pathfinding : MonoBehaviour
 
     void Update()
     {
-        FindPath(seeker.position, target.position);
+        if (Input.GetButtonDown("Jump"))//get new path if we click jump button
+        {
+            FindPath(seeker.position, target.position);
+        }
     }
 
     void FindPath(Vector3 startPos, Vector3 targetPos)
     {
+        //set a timer
+        Stopwatch sw = new Stopwatch();
+        sw.Start();
+
         Node startNode = grid.NodeFromWorldPoint(startPos);
         Node targetNode = grid.NodeFromWorldPoint(targetPos);
 
-        List<Node> openSet = new List<Node>();//this is not hashed because it is constantly changing
+        Heap<Node> openSet = new Heap<Node>(grid.MaxSize);//this is not hashed because it is constantly changing
         HashSet<Node> closedSet = new HashSet<Node>();//this is hashed because only thing changing is things get added
 
         //add start node to open set and enter a loop
@@ -31,20 +39,13 @@ public class Pathfinding : MonoBehaviour
 
         while (openSet.Count > 0)//loop so long as set isn't empty
         {
-            Node currentNode = openSet[0];
-            for (int i = 1; i < openSet.Count; i++)
-            {
-                if (openSet[i].fCost < currentNode.fCost || openSet[i].fCost == currentNode.fCost && openSet[i].hCost < currentNode.hCost )//if fCost is less than current smallest fCost...in case of tie refer to hCost
-                {
-                    currentNode = openSet[i];
-                }
-            }
-
-            openSet.Remove(currentNode);//remove from open set and add to closed
+            Node currentNode = openSet.RemoveFirst();
             closedSet.Add(currentNode);
 
             if (currentNode == targetNode)//if we made it to target
             {
+                sw.Stop();
+                print("Path found: " + sw.ElapsedMilliseconds + " ms");
                 RetracePath(startNode, targetNode);
                 return;
             }
