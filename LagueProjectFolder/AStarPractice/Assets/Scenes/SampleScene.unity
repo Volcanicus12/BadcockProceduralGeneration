@@ -249,7 +249,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 147049c5c51f7764b84dc2ac3d23ec0c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  displayGridGizmos: 0
+  displayGridGizmos: 1
   unwalkableMask:
     serializedVersion: 2
     m_Bits: 64
@@ -264,6 +264,7 @@ MonoBehaviour:
       serializedVersion: 2
       m_Bits: 256
     terrainPenalty: 10
+  obstacleProximityPenalty: 10
 --- !u!4 &312572644
 Transform:
   m_ObjectHideFlags: 0
