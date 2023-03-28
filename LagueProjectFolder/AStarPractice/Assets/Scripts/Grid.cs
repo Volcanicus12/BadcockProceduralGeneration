@@ -11,6 +11,10 @@ public class Grid : MonoBehaviour
     public float nodeRadius;//how much space each node covers
     Node[,] grid;
 
+    public TerrainType[] walkableRegions;
+    LayerMask walkableMask;//layer mask to hold all walkable layers
+    Dictionary<int, int> walkableRegionsDictionary = new Dictionary<int, int>();
+
     //start info
     float nodeDiameter;
     int gridSizeX, gridSizeY;
@@ -21,6 +25,12 @@ public class Grid : MonoBehaviour
         nodeDiameter = nodeRadius * 2;
         gridSizeX = Mathf.RoundToInt(gridWorldSize.x / nodeDiameter);
         gridSizeY = Mathf.RoundToInt(gridWorldSize.y / nodeDiameter);
+
+        foreach (TerrainType region in walkableRegions)
+        {
+            walkableMask.value = walkableMask | region.terrainMask.value;//| is a bitwise or
+            walkableRegionsDictionary.Add((int)Mathf.Log(region.terrainMask.value, 2), region.terrainPenalty);//add layer and penalty to dict
+        }
 
         CreateGrid();
     }
@@ -48,7 +58,21 @@ public class Grid : MonoBehaviour
 
                 //collision check
                 bool walkable = !(Physics.CheckSphere(worldPoint, nodeRadius, unwalkableMask));//check sphere just sees if there is a collision using position and radius
-                grid[x, y] = new Node(walkable, worldPoint, x, y);//make grid
+
+                int movementPenalty = 0;
+
+                //raycast for movePenalty
+                if (walkable)
+                {
+                    Ray ray = new Ray(worldPoint + Vector3.up * 50, Vector3.down);
+                    RaycastHit hit;
+                    if (Physics.Raycast(ray, out hit, 100, walkableMask))//if get a hit
+                    {
+                        walkableRegionsDictionary.TryGetValue(hit.collider.gameObject.layer, out movementPenalty);//gets movement penalty
+                    }
+                }
+
+                grid[x, y] = new Node(walkable, worldPoint, x, y, movementPenalty);//make grid
             }
         }
     }
@@ -112,5 +136,12 @@ public class Grid : MonoBehaviour
                 Gizmos.DrawCube(n.worldPosition, Vector3.one * (nodeDiameter - 0.1f));//draws cube with a little bit of space (the 0.1)
             }
         }
+    }
+
+    [System.Serializable]
+    public class TerrainType
+    {
+        public LayerMask terrainMask;
+        public int terrainPenalty;
     }
 }

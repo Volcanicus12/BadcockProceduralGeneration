@@ -11,6 +11,8 @@ public class Node : IHeapItem<Node>
     public int gridX;
     public int gridY;
 
+    public int movementPenalty;
+
     public int gCost;//dist from start node
     public int hCost;//dist from end node
 
@@ -18,13 +20,15 @@ public class Node : IHeapItem<Node>
 
     int heapIndex;
 
-    public Node(bool _walkable, Vector3 _wordPos, int _gridX, int _gridY)
+    public Node(bool _walkable, Vector3 _wordPos, int _gridX, int _gridY, int _penalty)
     {
         walkable = _walkable;
         worldPosition = _wordPos;
 
         gridX = _gridX;
         gridY = _gridY;
+
+        movementPenalty = _penalty;
     }
 
     public int fCost
