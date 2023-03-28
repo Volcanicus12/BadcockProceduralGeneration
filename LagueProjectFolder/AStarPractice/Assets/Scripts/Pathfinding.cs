@@ -6,23 +6,14 @@ using System;
 
 public class Pathfinding : MonoBehaviour
 {
-    PathRequestManager requestManager;//reference to PathRequestManager
-
     Grid grid;
 
     void Awake()
     {
-        requestManager = GetComponent<PathRequestManager>();
-
         grid = GetComponent<Grid>();//this and Grid script must be on same game object in order to work
     }
 
-    public void StartFindPath(Vector3 startPos, Vector3 targetPos)
-    {
-        StartCoroutine(FindPath(startPos, targetPos));
-    }
-
-    IEnumerator FindPath(Vector3 startPos, Vector3 targetPos)//IEnumerator makes it a coroutine
+    public void FindPath(PathRequest request, Action<PathResult> callback)//IEnumerator makes it a coroutine
     {
         //set a timer
         Stopwatch sw = new Stopwatch();
@@ -31,8 +22,8 @@ public class Pathfinding : MonoBehaviour
         Vector3[] waypoints = new Vector3[0];
         bool pathSuccess = false;
 
-        Node startNode = grid.NodeFromWorldPoint(startPos);
-        Node targetNode = grid.NodeFromWorldPoint(targetPos);
+        Node startNode = grid.NodeFromWorldPoint(request.pathStart);
+        Node targetNode = grid.NodeFromWorldPoint(request.pathEnd);
 
         if (startNode.walkable && targetNode.walkable)//only pathfind if both start and stop are walkable
         {
@@ -85,14 +76,12 @@ public class Pathfinding : MonoBehaviour
                 }
             }
         }
-        yield return null;//means wait a frame before returning
-
         if (pathSuccess)
         {
             waypoints = RetracePath(startNode, targetNode);
-
+            pathSuccess = waypoints.Length > 0;//counteracts weird bug that happens if you move a little
         }
-        requestManager.FinishedProcessingPath(waypoints, pathSuccess);
+        callback(new PathResult(waypoints, pathSuccess, request.callback));//use callback to return to finishedProcessingPath
     }
 
     //retrace steps using parents to get path from start to end

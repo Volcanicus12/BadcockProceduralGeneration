@@ -1,17 +1,15 @@
-using System.Collections;
+ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using System.Threading;
 
 public class PathRequestManager : MonoBehaviour
 {
-    Queue<PathRequest> pathRequestQueue = new Queue<PathRequest>();
-    PathRequest currentPathRequest;
+    Queue<PathResult> results = new Queue<PathResult>();
 
     //need static variables to get info from static requestPath
     static PathRequestManager instance;
-
-    bool isProcessingPath;//are we processing right now
 
     //references
     Pathfinding pathfinding;
@@ -21,45 +19,72 @@ public class PathRequestManager : MonoBehaviour
         instance = this;
         pathfinding = GetComponent<Pathfinding>();
     }
-
-    public static void RequestPath(Vector3 pathStart, Vector3 pathEnd, Action<Vector3[], bool> callback)//action stores a method til it is ready to be sent
+    
+    void Update()
     {
-        PathRequest newRequest = new PathRequest(pathStart, pathEnd, callback);//make request
-        instance.pathRequestQueue.Enqueue(newRequest);//stick request in queue
-        instance.TryProcessNext();
+        if (results.Count > 0)
+        {
+            int itemsInQueue = results.Count;
+
+            lock (results)
+            {
+                for(int i = 0; i < itemsInQueue; i++)
+                {
+                    PathResult result = results.Dequeue();
+                    result.callback(result.path, result.success);
+                }
+            }
+        }
     }
 
-    //see if we are currently processing and if not then we process next one
-    void TryProcessNext()
+    public static void RequestPath(PathRequest request)//action stores a method til it is ready to be sent
     {
-        if (!isProcessingPath && pathRequestQueue.Count > 0)//if not processing something and queue isn't empty
+        ThreadStart threadStart = delegate
         {
-            currentPathRequest = pathRequestQueue.Dequeue();//gets and removes item from queue
-            isProcessingPath = true;
-            pathfinding.StartFindPath(currentPathRequest.pathStart, currentPathRequest.pathEnd);
-        }
+            instance.pathfinding.FindPath(request, instance.FinishedProcessingPath);
+        };
+
+        threadStart.Invoke();//do the call
     }
 
     //called when pathfinding finishes finding a path
-    public void FinishedProcessingPath(Vector3[] path, bool success)
+    public void FinishedProcessingPath(PathResult result)
     {
-        currentPathRequest.callback(path, success);
-        isProcessingPath = false;
-        TryProcessNext();
-    }
-
-    //structure to hold all RequestPath info
-    struct PathRequest {
-        public Vector3 pathStart;
-        public Vector3 pathEnd;
-        public Action<Vector3[], bool> callback;
-
-        public PathRequest(Vector3 _start, Vector3 _end, Action<Vector3[], bool> _callback)
+        //lock result queue before enqueue it
+        lock (results)
         {
-            pathStart = _start;
-            pathEnd = _end;
-            callback = _callback;
+            results.Enqueue(result);//add new result to enqueue
         }
-
     }
+}
+
+public struct PathResult
+{
+    public Vector3[] path;
+    public bool success;
+    public Action<Vector3[], bool> callback;
+
+    public PathResult(Vector3[] path, bool success, Action<Vector3[], bool> callback)
+    {
+        this.path = path;
+        this.success = success;
+        this.callback = callback;
+    }
+}
+
+
+//structure to hold all RequestPath info
+public struct PathRequest
+{
+    public Vector3 pathStart;
+    public Vector3 pathEnd;
+    public Action<Vector3[], bool> callback;
+
+    public PathRequest(Vector3 _start, Vector3 _end, Action<Vector3[], bool> _callback)
+    {
+        pathStart = _start;
+        pathEnd = _end;
+        callback = _callback;
+    }
+
 }
