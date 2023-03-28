@@ -7,8 +7,9 @@ public class Path
     public readonly Vector3[] lookPoints;
     public readonly Line[] turnBoundaries;
     public readonly int finishLineIndex;
+    public readonly int slowDownIndex;
 
-    public Path(Vector3[] waypoints, Vector3 startPos, float turnDst)
+    public Path(Vector3[] waypoints, Vector3 startPos, float turnDst, float stoppingDst)
     {
         lookPoints = waypoints;//lookpoint is just a rebranding of waypoint
         turnBoundaries = new Line[lookPoints.Length];
@@ -24,6 +25,18 @@ public class Path
             turnBoundaries[i] = new Line(turnBoundaryPoint, previousPoint - dirToCurrentPoint * turnDst);//prev-dir*turn is to account for if the outcome of dir is too large and causes our line to reverse
             previousPoint = turnBoundaryPoint;
 
+        }
+
+        //work backwards from end to find where to start slowing down
+        float dstFromEndPoint = 0;
+        for (int i =lookPoints.Length - 1; i > 0; i--)
+        {
+            dstFromEndPoint += Vector3.Distance(lookPoints[i], lookPoints[i - 1]);//add to dst
+            if (dstFromEndPoint > stoppingDst)//if dst is far enough then this is the place
+            {
+                slowDownIndex = i;
+                break;
+            }
         }
     }
 
