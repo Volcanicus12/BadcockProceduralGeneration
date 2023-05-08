@@ -9,6 +9,8 @@ public class Pathfinding2 : MonoBehaviour
 
     Grid2 grid;
 
+    public float zChangePenalty;//this var is meant to penalize vertical change upwards and  encourage vertical change downwards
+
     void Awake()
     {
         requestManager = GetComponent<PathRequestManager2>();
@@ -54,7 +56,8 @@ public class Pathfinding2 : MonoBehaviour
                     continue;
                 }
 
-                int newMovementCostToANeighbor = currentNode.gCost + GetDistance(currentNode, neighbor);
+                //int newMovementCostToANeighbor = currentNode.gCost + GetDistance(currentNode, neighbor);
+                int newMovementCostToANeighbor = Mathf.RoundToInt(currentNode.gCost + GetDistance(currentNode, neighbor) + ((neighbor.worldPosition.y - currentNode.worldPosition.y) * zChangePenalty));//this version adds something to penalize moving upwards
                 //check if shorter or neighbor not in open
                 if (newMovementCostToANeighbor < neighbor.gCost || !openSet.Contains(neighbor))
                 {

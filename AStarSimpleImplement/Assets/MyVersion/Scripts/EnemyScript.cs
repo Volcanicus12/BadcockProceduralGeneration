@@ -10,6 +10,24 @@ public class EnemyScript : MonoBehaviour
     //save the character object location
     public GameObject characterObject;
 
+    //script references
+    Pathfinding2 pathfindingScript;
+    PathRequestManager2 pathRequestManager;
+    CharacterScript charScript;
+    Grid2 grid;
+    Unit2 unit;
+
+
+
+    void Awake()
+    {
+        pathfindingScript = this.GetComponent<Pathfinding2>();
+        pathRequestManager = this.GetComponent<PathRequestManager2>();
+        charScript = characterObject.GetComponent<CharacterScript>();
+        grid = this.GetComponent<Grid2>();
+        unit = this.GetComponent<Unit2>();
+    }
+
     //see if character is in LOS
     public void CanSeeCharacter(){
         //raycast to search for a player
@@ -17,13 +35,13 @@ public class EnemyScript : MonoBehaviour
         RaycastHit hit;
 
         //see what we hit
-        if (Physics.Raycast(ray, out hit, characterObject.GetComponent<CharacterScript>().enemyRadius)){//if get a hit
+        if (Physics.Raycast(ray, out hit, charScript.enemyRadius)){//if get a hit
             if (hit.transform.gameObject.layer == LayerMask.NameToLayer("Character"))//if the raycast is hitting the character, instead of an obstacle/ground
             {
                 //pathfind to them
-                this.GetComponent<Grid2>().CreateGrid();
-                this.GetComponent<Pathfinding2>().StartFindPath(this.transform.position, characterObject.transform.position);
-                PathRequestManager2.RequestPath(transform.position, characterObject.transform.position, GetComponent<Unit2>().OnPathFound);
+                grid.CreateGrid();//get component is costly...put in awake or start
+                pathfindingScript.StartFindPath(this.transform.position, characterObject.transform.position);
+                pathRequestManager.RequestPath(transform.position, characterObject.transform.position, unit.OnPathFound);
             }
 
         }
